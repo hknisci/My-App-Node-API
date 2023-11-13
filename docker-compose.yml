@@ -1,0 +1,61 @@
+version: '3.5'
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: foodie
+      POSTGRES_USER: api_user
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./queries/food.sql:/docker-entrypoint-initdb.d/create_tables.sql
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: node-api:latest
+    depends_on:
+      - db
+    container_name: node-api-container
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: api_user
+      DATABASE_PASSWORD: root
+      DB_DATABASE: foodie
+      PORT: 8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    labels:
+      - "maintainer=hknisci01@gmail.com"
+      - "version=1.0"
+      - "description=Node_API application"
+
+volumes:
+  db_data:
+    # driver: local
+
+  # Uncomment and configure the following service if your application requires a database
+  # db:
+  #   image: postgres:latest
+  #   container_name: postgres-container
+  #   environment:
+  #     POSTGRES_DB: your_db
+  #     POSTGRES_USER: your_user
+  #     POSTGRES_PASSWORD: your_password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - db-data:/var/lib/postgresql/data
+  #   restart: unless-stopped
