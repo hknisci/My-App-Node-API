@@ -1,0 +1,73 @@
+# Default values for your Node.js application.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: your-image-repository/node-app
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use. If not set and create is true, a name is generated using the fullname template
+  name: ""
+  # Additional service account annotations
+  annotations: {}
+configMap:
+  # Data to be stored in the ConfigMap
+  data:
+    # Example: setting an environment variable
+    APP_ENV: "production"
+    # Add other configuration data as needed
+externalSecrets:
+  enabled: true
+  backendType: [backend_type] # e.g., 'secretsManager', 'systemManager', 'vault', etc.
+  secrets:
+    - name: DB_PASSWORD
+      key: [external_secret_key] # The key name in the external secret management system
+      property: [property_name] # Optional: specific property in the external secret
+
+
+
