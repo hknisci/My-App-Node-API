@@ -170,7 +170,7 @@ COPY . .
 The build stage uses the lightweight node:14-alpine image, optimized for size. The WORKDIR sets the working directory where the build will take place. Dependencies are installed after copying the package.json and package-lock.json to take advantage of Docker's layer caching, making subsequent builds faster when dependencies don't change. The rest of the application code is copied afterward.
 
 ### Production Stage
-```
+```dockerfile
 FROM node:14-alpine as production
 ENV NODE_ENV=production
 WORKDIR /app
@@ -188,3 +188,73 @@ LABEL description="This is the production stage of our multi-stage Docker build.
 The production stage starts fresh with the same base image to keep the production image lean. It copies the built application from the build stage, then installs only production dependencies. It changes the user to node for security reasons, exposes the application's port, and defines the command to start the application. The health check ensures the application is running and healthy after deployment. Labels provide metadata about the image.
 
 ## docker-compose.yml Explained
+The docker-compose.yml file defines a multi-container Docker application, making it easy to launch complex environments.
+
+### Services Configuration
+```yaml
+services:
+  db:
+    image: postgres:latest
+```
+A PostgreSQL database is set up as a service, which is a common requirement for applications that persist data.
+```yaml
+    environment:
+      POSTGRES_DB: foodie
+      POSTGRES_USER: api_user
+      POSTGRES_PASSWORD: root
+```
+Environment variables are used to configure the database according to the application's needs without hardcoding values into the image.
+```yaml
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./queries/food.sql:/docker-entrypoint-initdb.d/create_tables.sql
+```
+Persistent storage is defined for the database data, and an initialization script is provided to set up the schema on first launch.
+```yaml
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+```
+The application service is built using the Dockerfile in the current context, ensuring that any changes in the Dockerfile will be reflected in the built image.
+```yaml
+    depends_on:
+      - db
+```
+Specifies a dependency on the database service, meaning the app service will only start after the db service is up and running.
+```yaml
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=db
+      ...
+```
+The application is configured for production with environment variables that point to the database service for connections.
+```yml
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      ...
+```
+A health check is also included for the application service, similar to the Dockerfile configuration.
+
+### Volumes Configuration
+```yaml
+volumes:
+  db_data:
+```
+A named volume is created for the PostgreSQL data, which ensures that the database state is maintained across container restarts and updates.
+
+## Running with docker-compose
+To run the services defined in the docker-compose.yml file:
+```sh
+docker-compose up
+```
+This command will start all services defined in the file. If there are changes in the Dockerfile or the build context, docker-compose will rebuild the image automatically. It also starts the containers with their configured volumes, environment variables, and dependencies.
+
+For a production environment, you might want to run the services in detached mode:
+```sh
+docker-compose up -d
+```
+This will start the services in the background, allowing you to continue using the terminal. You can view the logs for each service with docker-compose logs and stop the services with 
+```sh
+docker-compose down
+```
