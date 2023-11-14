@@ -258,3 +258,237 @@ This will start the services in the background, allowing you to continue using t
 ```sh
 docker-compose down
 ```
+
+## GitLab
+### Comprehensive Project Guide
+This part provides an in-depth guide covering the implementation of Two-Factor Authentication in GitLab, utilizing GitLab's Container Registry, and the process of Dockerizing a Node.js application followed by its deployment using GitLab CI/CD.
+### Table of Contents
+1.	Implementing Two-Factor Authentication in GitLab
+2.	Utilizing GitLab's Container Registry
+3.	Dockerizing and Deploying a Node.js App with GitLab CI/CD
+________________________________________
+### Implementing Two-Factor Authentication in GitLab
+[GitLab's Two-Factor Authentication Documentation](https://docs.gitlab.com/ee/user/profile/account/two_factor_authentication.html)
+
+Step-by-Step Guide:
+1.	Understanding 2FA: Learn about the importance of adding an extra security layer to your GitLab account.
+2.	Choosing 2FA Methods: Decide between TOTP and WebAuthn devices.
+3.	Enabling 2FA in GitLab:
+  -	Navigate to your user settings.
+  -	Follow the instructions to enable 2FA.
+4.	Using Personal Access Tokens: Replace your password with personal access tokens for Git over HTTPS or GitLab API.
+5.	Managing Recovery Codes: Securely store your recovery codes for emergency access.
+6.	Disabling 2FA: Understand the steps to disable 2FA if needed.
+________________________________________
+### Utilizing GitLab's Container Registry
+[GitLab Container Registry Documentation](https://docs.gitlab.com/ee/user/packages/container_registry/)
+Detailed Instructions:
+1.	Enabling the Registry: Steps to enable the Container Registry in your GitLab instance.
+2.	Working with Dependency Proxy: Use the Dependency Proxy for Docker Hub to avoid rate limits.
+3.	Registry Management:
+  -	View and manage container images through the GitLab UI.
+  -	Learn to search, sort, filter, and delete images and tags.
+4.	Using Container Images: Steps to download and run images from the registry.
+5.	Visibility and Permissions: Adjusting the visibility and permissions of your Container Registry.
+________________________________________
+### Dockerizing and Deploying a Node.js App with GitLab CI/CD
+[Guide by Taylor Callsen](https://taylor.callsen.me/how-to-dockerize-a-nodejs-app-and-deploy-it-using-gitlab-ci/)
+Comprehensive Process
+1.	Creating the Node.js App: Start with a simple REST API using Express.
+2.	Writing the Dockerfile: Define the steps to package your app into a Docker image.
+3.	Setting Up the Staging Server: Prepare your server for SSH deployments and configure Apache for web requests.
+4.	Configuring GitLab:
+  - Create a new project in GitLab.
+  - Set up and configure Runners.
+  - Define CI/CD variables like server IP and SSH keys.
+5.	Building the CI/CD Pipeline:
+  - Add a gitlab-ci.yaml file to your project.
+  - Define stages for building and deploying the Docker image.
+6.	Security Practices: Implement best practices for key management and SSH access.
+Additional Tips:
+  - Troubleshooting: Common issues and their solutions.
+  - Best Practices: Security-focused recommendations for Docker deployments.
+________________________________________
+## .gitlab-ci.yml File Explanation
+This file is a configuration for GitLab's CI/CD pipeline, defining how the software is built, tested, and deployed.
+
+### Stages
+The pipeline is divided into three stages: build, test, and deploy.
+```yaml
+stages:
+  - build
+  - test
+  - deploy
+```
+#### Build Stage
+Purpose: To create a Docker image of the application.
+Image Used: docker:19.03.12.
+Services: Docker-in-Docker (docker:dind) is used to allow Docker commands within the Docker executor.
+Script:
+   - Builds a Docker image with the tag $IMAGE_TAG.
+   - Pushes the image to a registry.
+Branches: This job runs only on the master and develop branches.
+#### Test Stage
+Purpose: To run tests in the application.
+Image Used: docker:19.03.12.
+Services: Docker-in-Docker (docker:dind).
+Script:
+   - Installs dependencies and runs tests using a Node.js Docker image.
+Artifacts:
+   - Stores test results for one week.
+Branches: Runs only on master and develop.
+#### Deploy Stage
+Divided into: deploy_staging and deploy_production.
+Image Used: docker:19.03.12.
+Services: Docker-in-Docker (docker:dind).
+##### Deploy to Staging
+Environment: staging.
+Script:
+   - Uses docker-compose to deploy the application.
+   - Branch: Runs only on develop.
+#### Deploy to Production
+Environment: production.
+Manual Trigger: Deployment to production requires a manual trigger.
+Script:
+   - Deploys the application and checks if the app service is running.
+Branch: Runs only on master.
+### Variables
+Global variables used across all stages.
+```yaml
+variables:
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  DOCKER_HOST: "tcp://docker:2376"
+  ...
+  KUBE_NAMESPACE: if $CI_COMMIT_BRANCH == "master" then "production" else "staging"
+```
+IMAGE_TAG: Defines the Docker image tag.
+DOCKER_HOST and related variables: Configures Docker-in-Docker.
+KUBE_NAMESPACE: Sets the Kubernetes namespace based on the branch.
+### Before Script
+Commands that run before each job's script.
+```yaml
+before_script:
+  - echo "Starting CI/CD Pipeline for $CI_COMMIT_REF_NAME"
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+```
+### build Job
+This job is part of the build stage and is responsible for creating the Docker image of the application.
+```yaml
+build:
+  stage: build
+  image: docker:19.03.12
+  services:
+    - docker:dind
+  script:
+    - echo "Building Docker image with tag $IMAGE_TAG"
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+  only:
+    - master
+    - develop
+```
+Image & Services: Uses Docker 19.03.12 and Docker-in-Docker service.
+Script:
+   - Builds the Docker image tagged with $IMAGE_TAG.
+   - Pushes the image to the Docker registry.
+Branches: Executes only on master and develop branches.
+### test Job
+This job runs automated tests in the application.
+```yaml
+test:
+  stage: test
+  image: docker:19.03.12
+  services:
+    - docker:dind
+  script:
+    - echo "Running tests"
+    - docker run --rm -v $(pwd):/app -w /app node:14-alpine npm install
+    - docker run --rm -v $(pwd):/app -w /app node:14-alpine npm test
+  artifacts:
+    paths:
+      - test_results/
+    expire_in: 1 week
+  only:
+    - master
+    - develop
+```
+Image & Services: Uses the same Docker image and service as the build job.
+Script:
+   - Runs a Node.js container to install dependencies and execute tests.
+Artifacts: Stores test results for one week.
+Branches: Limited to master and develop.
+### deploy_staging Job
+This job handles the deployment of the application to the staging environment.
+```yaml
+deploy_staging:
+  stage: deploy
+  image: docker:19.03.12
+  services:
+    - docker:dind
+  environment:
+    name: staging
+  before_script:
+    - apk add --no-cache docker-compose
+  script:
+    - echo "Deploying to staging environment"
+    - docker-compose -f docker-compose.yml up -d
+  only:
+    - develop
+```
+Environment: Specifies the deployment environment as staging.
+Before Script: Installs docker-compose.
+Script: Uses docker-compose to deploy the application.
+Branch: Executes only on the develop branch.
+### deploy_production Job
+This job is for deploying the application to the production environment.
+```yaml
+deploy_production:
+  stage: deploy
+  image: docker:19.03.12
+  services:
+    - docker:dind
+  environment:
+    name: production
+  before_script:
+    - apk add --no-cache docker-compose
+  script:
+    - echo "Deploying to production environment"
+    - docker-compose -f docker-compose.yml up -d
+    - |
+      if ! docker-compose ps | grep 'app'; then
+        echo "Deployment failed: app service is not running."
+        exit 1
+      fi
+  when: manual
+  only:
+    - master
+```
+Environment: Set to production.
+Manual Trigger: Deployment to production requires manual approval.
+Script:
+   - Deploys using docker-compose.
+   - Checks if the app service is running, and exits with an error if not.
+Branch: Limited to the master branch.
+This .gitlab-ci.yml file is a comprehensive example of a multi-stage CI/CD pipeline, showcasing build, test, and deployment processes with Docker and GitLab CI/CD.
+________________________________________
+After these review and configuration steps, I want to illustrate with a working example:
+
+## Jobs:
+![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/ddfea773-2c10-47f8-aa96-a99c11692a26)
+
+## Container Registry:
+![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/e1a2eb17-b7fb-44be-9aae-9fe1c2478f22)
+
+## Environment:
+![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/75a65801-10e0-4d8b-b649-6468c4c046d1)
+________________________________________
+## Helm Chart
+
+
+## ArgoCD
+
+
+## External-Secret
+
+
+## Graphs
