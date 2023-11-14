@@ -17,7 +17,13 @@ service:
   type: ClusterIP
   port: 8080
 
-
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
 
 resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -55,7 +61,13 @@ configMap:
     # Example: setting an environment variable
     APP_ENV: "production"
     # Add other configuration data as needed
-
+externalSecrets:
+  enabled: true
+  backendType: [backend_type] # e.g., 'secretsManager', 'systemManager', 'vault', etc.
+  secrets:
+    - name: DB_PASSWORD
+      key: [external_secret_key] # The key name in the external secret management system
+      property: [property_name] # Optional: specific property in the external secret
 
 
 
