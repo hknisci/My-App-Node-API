@@ -534,6 +534,23 @@ My Helm chart is not just a deployment tool; it is a testament to my understandi
 
 In light of these considerations, it's clear that while my Helm chart is a robust and well-designed framework, it is not yet fully primed for deployment, especially in environments where advanced security, operational efficiency, scalability, and compliance are paramount. The integration of an external-secrets system is not just an enhancement; it's a critical step towards unlocking the full potential of my Helm chart, ensuring that it can securely and efficiently manage applications at scale and in compliance with stringent security standards.
 ## ArgoCD
+Currently, there's a critical juncture in the deployment process of our Kubernetes application using ArgoCD, largely attributed to certain deficiencies and inaccuracies within the external-secrets and ingress configurations in our Helm chart. These issues have notably hindered our progress in utilizing ArgoCD, a tool pivotal for continuous deployment in Kubernetes environments.
 
+The crux of the challenge lies in the Helm chart's external-secrets and ingress structures. External-secrets are instrumental in managing sensitive data securely and efficiently, a necessity in modern cloud-native applications. However, due to either incomplete or erroneous configurations within this segment of the chart, there's a significant gap in our ability to manage secrets effectively. This gap not only poses potential security risks but also disrupts the seamless operational flow that is essential for a robust CI/CD pipeline.
+
+Similarly, the ingress configuration, which is responsible for managing external access to our services, is not aligned with our requirements or best practices. This misalignment leads to issues in routing traffic and ensuring reliable and secure access to our applications, which is a cornerstone of service delivery in Kubernetes.
+
+Despite these challenges, there's a silver lining. Once these issues are addressed and rectified, we anticipate a smooth transition to leveraging ArgoCD for our deployment needs. ArgoCD, renowned for its ability to facilitate continuous deployment through GitOps practices, promises a more automated, consistent, and transparent deployment process. It aligns well with our objectives of maintaining high operational standards and ensuring that deployments are repeatable, scalable, and secure.
+
+As depicted in the accompanying image, the adoption of ArgoCD is not just a future goal but a strategic imperative. The resolution of the existing issues in our Helm chart will pave the way for a more streamlined and efficient deployment pipeline, harnessing the full capabilities of ArgoCD. This transition is anticipated to significantly enhance our deployment workflows, bringing about a more agile, responsive, and resilient infrastructure.
+
+![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/15d9f970-4476-491b-a285-6403aac9fc20)
+![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/595f749d-390b-42fa-b66d-4212df3de91c)
+![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/9e24d29f-8cb6-4f99-a8f8-f2bd83e1aeea)
+![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/afe5a28a-ad2c-4a86-9d41-ba2a667bafa2)
+
+In conclusion, while the current impediments in our Helm chart's external-secrets and ingress configurations have temporarily stalled our progress with ArgoCD, the path forward is clear. With the necessary revisions, we are poised to fully embrace ArgoCD's potential, marking a significant stride in our journey towards a more sophisticated and effective Kubernetes deployment strategy.
 
 ## Graphs
+The visual representation provided below has been sourced from [a specified website](https://levelup.gitconnected.com/gitops-in-kubernetes-with-gitlab-ci-and-argocd-9e20b5d3b55b), which has been instrumental in offering insights and information relevant to our discussion. Additionally, this website has served as a valuable resource, contributing significantly to our understanding and analysis of the subject matter.
+![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/30953d0e-4efd-49c7-bb06-20b82684449f)
