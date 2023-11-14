@@ -1,0 +1,31 @@
+apiVersion: v2
+name: my-applicationArgoCD 
+description: A Helm chart for deploying the Node_API application on Kubernetes
+type: application
+
+# Versioning
+version: 1.0.0
+appVersion: "1.0"
+
+# Maintainers
+maintainers:
+  - name: Hakan Isci
+    email: hknisci01@gmail.com
+
+# Keywords
+keywords:
+  - nodejs
+  - api
+  - kubernetes
+
+# Source and home URLs
+home: https://github.com/isNan909/Node_API
+sources:
+  - https://github.com/isNan909/Node_API
+
+# Dependencies (if any)
+# dependencies:
+  # Example of a dependency
+  # - name: nginx
+  #   version: "1.16.0"
+  #   repository: "https://charts.bitnami.com/bitnami"
