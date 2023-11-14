@@ -1,0 +1,80 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  DOCKER_HOST: "tcp://docker:2376"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_TLS_VERIFY: 1
+  DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"  
+  KUBE_NAMESPACE: if $CI_COMMIT_BRANCH == "master" then "production" else "staging"
+
+before_script:
+  - echo "Starting CI/CD Pipeline for $CI_COMMIT_REF_NAME"
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+
+build:
+  stage: build
+  image: docker:19.03.12
+  services:
+    - docker:dind
+  script:
+    - echo "Building Docker image with tag $IMAGE_TAG"
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+  only:
+    - master
+    - develop
+
+test:
+  stage: test
+  image: docker:19.03.12
+  services:
+    - docker:dind
+  script:
+    - echo "Running tests"
+    - docker run --rm -v $(pwd):/app -w /app node:14-alpine npm install
+    - docker run --rm -v $(pwd):/app -w /app node:14-alpine npm test
+  artifacts:
+    paths:
+      - test_results/
+    expire_in: 1 week
+  only:
+    - master
+    - develop
+
+deploy_staging:
+  stage: deploy
+  image: docker:19.03.12
+  services:
+    - docker:dind
+  environment:
+    name: staging
+  before_script:
+    - apk add --no-cache docker-compose
+  script:
+    - echo "Deploying to staging environment"
+    - docker-compose -f docker-compose.yml up -d
+  only:
+    - develop
+
+
+deploy_production:
+  stage: deploy
+  image: docker:19.03.12
+  services:
+    - docker:dind
+  environment:
+    name: production
+  before_script:
+    - apk add --no-cache docker-compose
+  script:
+    - echo "Deploying to production environment"
+    - docker-compose -f docker-compose.yml up -d
+  when: manual
+  only:
+    - master
+
