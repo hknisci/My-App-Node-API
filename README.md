@@ -473,13 +473,13 @@ This .gitlab-ci.yml file is a comprehensive example of a multi-stage CI/CD pipel
 ________________________________________
 After these review and configuration steps, I want to illustrate with a working example:
 
-## Jobs:
+## Jobs
 ![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/ddfea773-2c10-47f8-aa96-a99c11692a26)
 
-## Container Registry:
+## Container Registry
 ![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/e1a2eb17-b7fb-44be-9aae-9fe1c2478f22)
 
-## Environment:
+## Environment
 ![image](https://github.com/hknisci/My-App-Node-API/assets/73697911/75a65801-10e0-4d8b-b649-6468c4c046d1)
 ________________________________________
 ## Helm Chart
