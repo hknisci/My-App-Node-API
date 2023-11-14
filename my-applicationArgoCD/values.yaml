@@ -4,26 +4,17 @@
 
 replicaCount: 1
 
-image:
-  repository: your-image-repository/node-app
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+app:
+  image:
+    repository: hknisci/my-applicationArgoCD
+    tag: latest
+  service:
+    type: NodePort
+    port: 3000
 
 nameOverride: ""
 fullnameOverride: ""
 
-service:
-  type: ClusterIP
-  port: 8080
-
-ingress:
-  enabled: false
-  annotations: {}
-  hosts:
-    - host: chart-example.local
-      paths: []
-  tls: []
 
 resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -61,9 +52,10 @@ configMap:
     # Example: setting an environment variable
     APP_ENV: "production"
     # Add other configuration data as needed
-externalSecrets:
+
+postgres:
   image:
-    repository: externalSecrets
+    repository: hknisci/my-applicationArgoCD
     tag: 12
   user: api_user
   password: root

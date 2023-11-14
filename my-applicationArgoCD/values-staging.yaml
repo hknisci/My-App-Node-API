@@ -12,14 +12,6 @@ fullnameOverride: "node-app-staging"
 service:
   type: NodePort
 
-ingress:
-  enabled: true
-  annotations:
-    kubernetes.io/ingress.class: nginx
-  hosts:
-    - host: staging-node-app.example.com
-      paths: ["/"]
-
 resources:
   limits:
     cpu: 200m
@@ -41,9 +33,9 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-externalSecrets:
+postgres:
   image:
-    repository: externalSecrets
+    repository: hknisci/my-applicationArgoCD
     tag: 12
   user: api_user
   password: root
